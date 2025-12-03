@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manual Entry Addition Chart</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f4f8; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        
+        /* Layout Grid */
+        .main-container {
+            display: flex;
+            gap: 40px;
+            align-items: flex-start;
+            margin-top: 20px;
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        /* --- LEFT SIDE: Vertical Math --- */
+        .math-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 280px;
+            border-right: 2px solid #eee;
+            padding-right: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 30px;
+            text-align: center;
+            background: #e8eaf6;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #c5cae9;
+        }
+
+        .input-group input {
+            width: 50px;
+            font-size: 18px;
+            padding: 5px;
+            text-align: center;
+            border: 2px solid #9fa8da;
+            border-radius: 5px;
+        }
+
+        .start-btn {
+            background-color: #3f51b5;
+            color: white;
+            padding: 8px 15px;
+            font-size: 14px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            width: 100%;
+        }
+        
+        .reset-btn {
+            background-color: #9e9e9e;
+            color: white;
+            padding: 8px 15px;
+            font-size: 14px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 5px;
+            width: 100%;
+        }
+
+        /* MATH GRID */
+        .math-grid {
+            display: grid;
+            grid-template-columns: 30px 50px 50px 50px; /* Op | H | T | O */
+            font-size: 50px;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            line-height: 1.2;
+            justify-items: center;
+            color: #333;
+        }
+
+        .col-op { grid-column: 1; justify-self: start; }
+        .col-h  { grid-column: 2; }
+        .col-t  { grid-column: 3; }
+        .col-o  { grid-column: 4; }
+        .full-row { grid-column: 1 / span 4; width: 100%; }
+
+        .carry-text {
+            font-size: 28px;
+            color: #d35400; 
+            opacity: 0; 
+            transition: opacity 0.5s;
+            height: 35px;
+        }
+
+        .line { border-bottom: 4px solid #333; margin-bottom: 5px; }
+
+        /* The Live Answer Row */
+        .answer-cell { color: #2980b9; transition: color 0.3s; }
+        .answer-too-big { color: #c0392b; } /* Red if >9 */
+
+        /* --- RIGHT SIDE: Place Value Chart --- */
+        .chart-panel {
+            display: flex;
+            gap: 15px;
+        }
+
+        .column {
+            border: 3px solid #555;
+            border-radius: 12px;
+            width: 150px;
+            min-height: 450px;
+            background-color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .col-header {
+            width: 100%;
+            padding: 10px 0;
+            font-size: 22px;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+        }
+
+        .hundreds .col-header { background-color: #e74c3c; }
+        .tens .col-header { background-color: #3498db; }
+        .ones .col-header { background-color: #2ecc71; }
+
+        .chip-area {
+            flex-grow: 1;
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            display: flex;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .chip {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 1px solid rgba(0,0,0,0.2);
+            box-shadow: 2px 2px 0px rgba(0,0,0,0.1);
+        }
+        .chip.hundred { background-color: #e74c3c; }
+        .chip.ten { background-color: #3498db; }
+        .chip.one { background-color: #2ecc71; }
+
+        /* Controls Area at bottom of columns */
+        .col-controls {
+            width: 100%;
+            padding: 10px;
+            background: #f9f9f9;
+            border-bottom-left-radius: 9px;
+            border-bottom-right-radius: 9px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            border-top: 1px solid #ddd;
+        }
+
+        .add-btn {
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 50%;
+            border: none;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: transform 0.1s;
+        }
+        .add-btn:active { transform: scale(0.9); }
+        .btn-h { background-color: #c0392b; }
+        .btn-t { background-color: #2980b9; }
+        .btn-o { background-color: #27ae60; }
+
+        .regroup-btn {
+            background-color: #f1c40f;
+            color: #333;
+            border: 2px solid #f39c12;
+            padding: 5px 10px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            animation: pulse 1s infinite;
+            display: none;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1 style="color:#444;">Build & Bundle Addition</h1>
+
+    <div class="main-container">
+        
+        <div class="math-panel">
+            <div class="input-group">
+                <div style="font-size:14px; margin-bottom:5px;">Step 1: Write Problem</div>
+                <input type="number" id="num1" value="28"> + <input type="number" id="num2" value="34">
+                <button class="start-btn" onclick="setupProblem()">Set Problem on Paper</button>
+                <button class="reset-btn" onclick="resetAll()">Clear All</button>
+            </div>
+
+            <div class="math-grid" id="mathGrid" style="visibility: hidden;">
+                <div></div>
+                <div class="col-h carry-text" id="carry-h">1</div>
+                <div class="col-t carry-text" id="carry-t">1</div>
+                <div class="col-o"></div> 
+
+                <div></div>
+                <div class="col-h" id="grid-n1-h"></div>
+                <div class="col-t" id="grid-n1-t"></div>
+                <div class="col-o" id="grid-n1-o"></div>
+
+                <div class="col-op">+</div> 
+                <div class="col-h" id="grid-n2-h"></div> 
+                <div class="col-t" id="grid-n2-t"></div>
+                <div class="col-o" id="grid-n2-o"></div>
+
+                <div class="full-row line"></div>
+
+                <div></div>
+                <div class="col-h answer-cell" id="ans-h">0</div>
+                <div class="col-t answer-cell" id="ans-t">0</div>
+                <div class="col-o answer-cell" id="ans-o">0</div>
+            </div>
+        </div>
+
+        <div class="chart-panel">
+            
+            <div class="column hundreds">
+                <div class="col-header">Hundreds</div>
+                <div class="chip-area" id="cont-h"></div>
+                <div class="col-controls">
+                    <button class="add-btn btn-h" onclick="addChip(100)">+</button>
+                    <div id="count-h" style="font-weight:bold; color:#555;">0</div>
+                </div>
+            </div>
+
+            <div class="column tens">
+                <div class="col-header">Tens</div>
+                <div class="chip-area" id="cont-t"></div>
+                <div class="col-controls">
+                    <button id="btn-regroup-t" class="regroup-btn" onclick="regroup(10)">Bundle 10!</button>
+                    <button class="add-btn btn-t" onclick="addChip(10)">+</button>
+                    <div id="count-t" style="font-weight:bold; color:#555;">0</div>
+                </div>
+            </div>
+
+            <div class="column ones">
+                <div class="col-header">Ones</div>
+                <div class="chip-area" id="cont-o"></div>
+                <div class="col-controls">
+                    <button id="btn-regroup-o" class="regroup-btn" onclick="regroup(1)">Bundle 10!</button>
+                    <button class="add-btn btn-o" onclick="addChip(1)">+</button>
+                    <div id="count-o" style="font-weight:bold; color:#555;">0</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // State of the Chips
+        let h = 0, t = 0, o = 0;
+        let carryT = false, carryH = false;
+
+        function setupProblem() {
+            resetAll();
+            
+            let n1 = parseInt(document.getElementById('num1').value) || 0;
+            let n2 = parseInt(document.getElementById('num2').value) || 0;
+
+            // Fill the grid text, but DO NOT fill the chips
+            setGridNumber('n1', n1);
+            setGridNumber('n2', n2);
+            
+            document.getElementById('mathGrid').style.visibility = 'visible';
+            render();
+        }
+
+        function resetAll() {
+            h = 0; t = 0; o = 0;
+            carryT = false; carryH = false;
+            document.getElementById('carry-h').style.opacity = 0;
+            document.getElementById('carry-t').style.opacity = 0;
+            document.getElementById('mathGrid').style.visibility = 'hidden';
+            render();
+        }
+
+        function addChip(amount) {
+            if(amount === 1) o++;
+            if(amount === 10) t++;
+            if(amount === 100) h++;
+            render();
+        }
+
+        function regroup(type) {
+            if(type === 1 && o >= 10) {
+                o -= 10;
+                t++;
+                carryT = true; // Mark that we carried to Tens
+            }
+            if(type === 10 && t >= 10) {
+                t -= 10;
+                h++;
+                carryH = true; // Mark that we carried to Hundreds
+            }
+            render();
+        }
+
+        function render() {
+            // 1. Draw Chips in containers
+            drawChips('cont-h', h, 'hundred');
+            drawChips('cont-t', t, 'ten');
+            drawChips('cont-o', o, 'one');
+
+            // 2. Update small counts at bottom of columns
+            document.getElementById('count-h').innerText = h;
+            document.getElementById('count-t').innerText = t;
+            document.getElementById('count-o').innerText = o;
+
+            // 3. Update the Vertical Math Answer Area
+            // This links the chips to the paper problem
+            updateMathAnswer('ans-o', o, 1);
+            updateMathAnswer('ans-t', t, 10);
+            updateMathAnswer('ans-h', h, 100);
+
+            // 4. Show/Hide Bundle Buttons
+            document.getElementById('btn-regroup-o').style.display = (o >= 10) ? 'block' : 'none';
+            document.getElementById('btn-regroup-t').style.display = (t >= 10) ? 'block' : 'none';
+
+            // 5. Show Carries if they happened
+            if(carryT) document.getElementById('carry-t').style.opacity = 1;
+            if(carryH) document.getElementById('carry-h').style.opacity = 1;
+        }
+
+        function updateMathAnswer(elementId, value, place) {
+            let el = document.getElementById(elementId);
+            
+            // Logic: If there are 0 chips, we usually show 0, unless it's leading zeros in hundreds
+            if(place === 100 && value === 0) {
+                el.innerText = "";
+            } else {
+                el.innerText = value;
+            }
+
+            // If value is >= 10, turn text RED to show "Problem!"
+            if(value >= 10) {
+                el.classList.add('answer-too-big');
+            } else {
+                el.classList.remove('answer-too-big');
+            }
+        }
+
+        function drawChips(id, count, cssClass) {
+            let container = document.getElementById(id);
+            container.innerHTML = '';
+            for(let i=0; i<count; i++) {
+                let d = document.createElement('div');
+                d.className = `chip ${cssClass}`;
+                container.appendChild(d);
+            }
+        }
+
+        function setGridNumber(prefix, num) {
+            let s = num.toString();
+            let ones = s[s.length-1] || "";
+            let tens = s[s.length-2] || "";
+            let hund = s[s.length-3] || "";
+            document.getElementById(`grid-${prefix}-o`).innerText = ones;
+            document.getElementById(`grid-${prefix}-t`).innerText = tens;
+            document.getElementById(`grid-${prefix}-h`).innerText = hund;
+        }
+
+    </script>
+</body>
+</html>
